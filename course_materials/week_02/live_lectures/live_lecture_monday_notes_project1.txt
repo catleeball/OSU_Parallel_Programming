@@ -1,0 +1,98 @@
+Monte Carlo used to look at probabilities when you don't have complete info
+"I know probability between here and here, where is it"
+
+***** Due April 16 ***** typo in thing
+
+Doofuses running cannon, rough estimates of distances
+
+All variables have ranges x:y
+
+What's the probability they hit the castle?
+
+Grav -9.8 m^2/s
+
+Vary number of threads
+Vary number of monte carlo trials
+  numtrials, numthreads
+
+
+Scenarios (if-else in this order)
+
+  - test ball doesn't get to cliff, his lowest ground
+  - test ball hits cliff
+  - test ball lands on top plateau
+
+
+Equations
+
+  - test scenarios above
+
+
+Fill rand params for trials ahead of time
+  - we don't want to time test rand calls
+
+> pragma omp parallel for ?
+  for loop {monte carlo}
+    if {hits cliff}
+    elif {hits deck}
+    elif {hits castle}
+
+    count up hits on castle
+    is castle destroyed?
+
+    print probability of num hits / num trials
+
+
+grading rubric at bottom
+
+QA: castle is single point within 5 meters, castle is 10 meters wide
+
+
+More runs will bring you closer to probability
+Do enough runs to get decent sample for performance
+
+Q: should we vary numtrials?
+A: not a randomized var like our params, but you will manually vary to make table
+   num trials vs num threads to make table and graph
+   vary these with rand ranges to monte carlo
+   you'll get a parallel fraction saying how parallelizable this problem is
+   don't vary numtries (?)
+   
+
+========== Project notes slide deck ==========
+
+<9> making graphs
+
+------ trials ----->
+|
+|
+threads
+|         each cell is perf #
+|
+V
+
+insert scatter plot
+
+<11> graph
+  x = # monte carlo trials
+  y = # megatrials per second
+
+<12> transpose graph 
+swap row and col
+
+<13>
+  x now # cores
+
+<15> it's actually a 3d plot, combines last two
+
+*** prof: I usually don't actually run your code ***
+- but might if numbers are super wrong
+- if things look reasonable, prob won't even check the code
+
+
+Q: rubric two graphs
+A: When you click swap rowscols it swaps independent variables
+   leaves Y axis
+   changes X axis from threads to trials
+   performance is dependent variable
+

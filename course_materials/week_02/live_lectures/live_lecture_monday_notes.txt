@@ -1,0 +1,254 @@
+Q: OK if speedup less than 4?
+A: yeah, approximate is ok. Wednesday lecture will be Andell's law
+
+OpenMP quick ref card
+- openmp.org//wp-content/uploads/OpenMP-4.0-C.pdf
+
+
+Today's schedule: Go through OpenMP notes
+
+===== Slides: Parallel Programming using OpenMP =====
+
+(on resources page)
+
+  - multi-vendor standard
+  - uses fork-join model
+
+<4>
+
+What OpenMP isn't
+
+- Won't check for data dependencies, data conflicts, deadlocks, race conditions
+- Won't check for non-conforming code sequences
+- doesn't guarentee identical behavior across vendors and hardware
+- doesn't guarentee order of thread execution
+- not overhead-free
+- doesn't prevent you from wiring code that triggers cache perforamnce problems
+  like false-sharing
+  - false-sharing in cache notes next week
+
+<5>
+
+Mem Allocation in Multithreaded Program
+
+[diagram of single thread vs multi thread]
+
+- What changes is each thread gets its own stack
+  - used for passing functions, keeping return addrs, local vars
+
+<6>
+
+Using openmp on linux
+
+Q:A: Stack size doesn't increase across threads
+
+OpenMP based on pragmas, condition compilation
+At top of application do
+  # ifdef openmp
+
+
+<7> Visual Studio error
+
+<8> Numbers of OpenMP threads
+
+How many threads do you want available?
+  - omp_set_num_threads( num );
+How many cores prog has access to:
+  - see slide
+Which thread number this one is
+
+<9> Creating an OpenMP Team of Threads
+  - #pragma omp parallel      --> creates a team of threads, each thread then
+                                  execs all lines of code in this block
+<10> Create OpenMP team
+<11> illustrates non-deterministic thread order
+
+<12> Creating OpenMP threads in loops
+  - implied barrier at end where all threads wait to finish at and bracket of for
+  - default(none) encouraged
+    - keeps things private within loop , keeps compiler complaining
+<13>
+  - OpenMP doesn't enforce validity of your for loop
+  - index must be an int or ptr 
+  - start nor terminate may be changed during exec of loop
+  - start and terminate must have compatible types
+  - index can only be modified by changed expression (not modified inside loop itself)
+  - can't use break or goto to escape loop
+  - no interloop data deps such as `a[i] = a[i-1]+1.;`
+<14>
+<15> Vairable declared before for loop starts?
+  - if you want all threads to have own copy:
+    - declare private
+  - shared:
+    - shared(x)
+  - default(none)
+    - recommended
+
+For loop index is automatically private
+declared inside loop is auto private
+
+q: private(x,y) a: valid
+
+In C if you decalred iterator outside loop, gotta make it private explicitly
+
+<16> for loop fission
+  - oh no inter loop data dep
+  - break it into a separate loop, parallelize your other stuff
+
+<17> for loop collapse
+  - nested, where pragma go?
+    - `#pragma ... for collapse(2)` above nested loop
+    - gonna happen in project 2
+
+<18> SPMD
+  - "which thread am i"
+  - design pattern: total number of threads, break up threads yrself
+
+<19> openMP alloc of work to threads
+  - static threads: all work alloc n assigned at runtime
+  - dynamic threads:
+    - pool statically assigned some of work at runtime
+    - when thread is idle, gets some leftover loop passes
+    - round robin assignments
+  - when you know threads all take roughly same time:
+    - use static
+  - very different amounts of work:
+    - use dynamic
+  - dynamic has a little more overhead, but good if <above reasons>
+
+<20> schedule chunksize
+
+schedule(static, chunksize)
+
+- chunksize is how granularly it splits loop works
+- chunksize one "card dealer" one card to evferyone one at a time
+- consider if later loops will have more work
+  - chunk will help make sure threads get more fair blocks of work if
+    you know distribution of work across loop
+
+<21> arith ops in threads
+
+  - this is a reduction, accumulate into a common variable
+  - openmp has special clause for this
+    - shared(sum)
+  - think about asm: load sum, add partial, store sum
+    - what if scheduler breaks after load before add? explode
+
+<22> trapazoid integration calc
+  - oops it fucked and inconsistent
+  - use reduction(+:sum)
+  - see below trapazoid notes 
+
+<23> trapazoid graph
+
+===== OpenMP Reduction Case Study: Trapezoid Integration Example =====
+
+<2> integrate sin x and ya get 2.0
+    what a cool curve
+
+<3> Don't do it this way
+  - reduction all fucked
+<6> three ways to fix
+  - #1 atomic
+  - guarentee run to conclusion
+    - asm produced makes sure this thread will finish the sime += f
+  - can only handle <set of basic arith operators>
+<7>
+  - #2 critical
+  - heavier than atomic
+  - locks in scheduler
+  - oly on thread can drop into this bit of code at a time
+  - critical can be multiple lines of code (unlike atomic)
+  - no limits on ops here
+<8>
+  - #3  reduction(+:sum)
+    - sum += f;
+  - Way faster!! do this. optimized for reductions
+<11>
+  - why so fast?
+  - each thread adding into own sum, then openMP coalesces non-linearly
+    - pow(2) graph on slide
+    - log2n parallel coalesce instead of linear
+  - tournament brackets is this log2 reduction
+<14>
+  - what not do reduction by creating your own sums?
+  - false sharing, caching discussion next week
+
+
+*** you will use reduciton in project 2 ***
+
+
+====== OpenMP notes part 2
+
+<24> synchronization
+  - mutual exclusion lock (mutex)
+    - most common 
+    - put a lock at the top of code block
+    - unlock at end
+    - gates this chunk so only one thread inside at a time
+  - critical section
+    - unnamed mutex lock essentially
+    - omp single
+      - single thread ever
+      - useful for print statment
+  - barrier
+    - force all threads to wait to get here before any proceeds
+
+<25> sync code examples
+  - unset lock as soon as you can, or rather no later than it must 
+  - omp_test_lock()   // i spaced , go back n figure this out 
+
+<26> # pragma omp single
+  - single thread ever, useful for print statement
+
+Q: diff between set lock and test lock
+  A: test lock returns 0 or 1, no block
+     set lock blocks
+     "try lock"
+
+<27>
+  - *** project 3 ***
+  - pragma omp parallel sections
+  - sections are independent blocks, able to be assigned to sep threads if avail
+    - each section is thread
+    - not everything is for loop based
+      - just send this stuff off to do its stuff
+    - con: static, you must know how to split work where and when
+    - each thread concurrent on own core
+      - sometimes checks in on each other e.g. proj 3
+
+<28>
+  - ompenmp sections do for you? decrease overall exec
+  - concurrent sections, see diagram in slide
+
+<29>
+  - functional decomp example
+  - spawn threads for each section
+  - all run concurrent
+  - end curly implied barrier
+
+*** project 2 we'll put barriers in there ***
+
+
+pragma is clue to compiler for code gen
+  - for loop pragma, magic code gen to split up for loop nicely
+
+
+Q: could you have more threads than sections but add pgrama to a section?
+A: have had trouble with this, openmp seemed to struggle making more threads
+   from a thread, but no explicit no that I'm aware of, try it out, but think
+   it won't work
+
+Q: Hard limit on threads?
+A: Yes, idk what, maybe platform and hardware independent?
+
+CPU world many more threads than cores won't help
+GPU world maybe not
+
+
+===== TODO: Q for prof
+
+- Are there tools that check for OpenMP non-conforming code sequences
+
+
+

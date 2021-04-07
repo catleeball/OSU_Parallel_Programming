@@ -1,0 +1,29 @@
+Week #01
+
+Welcome to Week #1!
+
+We will ease ourselves into the topic of Parallel Programming with some
+introductory, but important, topics.  Pay special attention to Project #0
+<http://cs.oregonstate.edu/~mjb/cs575/Projects/proj00.html>, which is due
+Monday, April 5, and Quiz #1, which is due Friday, April 2 at 4:00 PM PDT.
+
+Live Lectures are Mondays and Wednesdays, 12:00-2:00, beginning Monday,
+March 29. The Zoom Room is
+https://oregonstate.zoom.us/s/8340727662?pwd=b01tZ0hJUzdHNUtrdTRqSkdwbG4zdz09
+If Zoom asks for a passcode, use:  ZeldaDog
+
+Here is a list of our Week #1 Lecture topics.  The notes are available in
+1-slide-per-page, 2-slides-per-page, 4-slides-per-page, and 6-slides-per-page
+PDF formats.
+
+The LV links are the lecture videos.  Some topics have one LV, some have more.
+
+
+
+Week	Topic
+1	Course Introduction	1pp	2pp	4pp	6pp	LV
+1	Project Notes	1pp	2pp	4pp	6pp	LV
+1	Windows Powershell Scripting	1pp	2pp	4pp	6pp	LV
+1	Simple OpenMP	1pp	2pp	4pp	6pp	LV
+1	Parallel Programming: Background Information	1pp	2pp	4pp	6pp	LV-1	LV-2
+

@@ -1,0 +1,225 @@
+=== Project 0 ===
+
+- http://web.engr.oregonstate.edu//~mjb/cs575/Projects/proj00.html
+
+
+Pick an array size of at least 10k
+1 thread, 4 thread, only two, can script if you want or run twice
+
+Mega-multiplies per second
+
+3. Num should be > 1
+Performance is the inverse of time
+
+Project asks you to compute <> but we haevn't covered, but we will
+
+this equation is for 1-4 threads, will be clear once we get to And All
+
+In all assignment, say what machine you ran it on, context for numbers
+
+Don't need a formal table since it's just two numbers
+
+Speed up in theory is 4x, but you won't
+like in mechanics, can't have perpetual motion machine, will be some loss
+
+Doing parallel programming isn't hard, doing it well is tricky :)
+
+
+In the website change the ?? source to something 10k or bigger
+
+Only two line change, only 30pts
+
+All the projects have rubric for grading at the bottom
+
+
+Q: FlowFP (parallel fraction) -- why is it always 4/3?
+A: bc always 1-4 threads, end up with formula, N is number of cores in equation
+A: 8 cores would be 8/7
+
+Q: Why is it not fully 4/4 what's the overhead?
+A: Speedups and AndAll's law
+   In any program, certain fraction is parallelizable
+   in this case the for loop
+   some isn't parallelizable
+   setup, firing off the threads
+   if N is #threads/#cores, exec time will get smaller, but not linear
+   setup won't get smaller tho 
+
+cshell script for running
+in the notes
+
+
+** ask Jordan for script writing tutorial **
+
+
+OpenMP was before multicore machines, still used multithreading, use kern scheduler\
+you'll still get threads but they'll schedule
+for conveinence more threads than cores is just fine 
+
+
+Comment: CS 444 to learn more about scheduler
+
+
+omp_get_wtime()   <--- exec time
+
+
+========== Background and Tips PPT ===========
+
+Background Tips slides are misc
+
+- do more work in same time
+- do same work in less time 
+- make some taks more convenient to implement
+
+ILP instruction level parallelism
+
+compiler does this, difficult to control
+
+<slide 3>
+if B not in cache, then it'll take time to fetch from mem, CPU will go idle wating
+ILP will prefetch stuff to cache ahead so exec time will maybe be in cache in time
+
+ILP aka Out of Order Execution
+nowdays built into CPU chip
+
+<slide 4>
+Data level parallelism DLP
+
+split in program logic work among threads / cores
+OpenMP & GPUs built for this kind of thing
+
+<5>
+Task Level Parallelism TLP
+Executing different instructions at runtime, see web browser
+
+<6>
+Flynn's Taxonomy
+
+SISD (single instruction single data)  |  SIMD (Single instruction multiple data)
+MISD (Multi Instruct single data)      |  MIMD (Milti processors running independently)
+
+SISD olde 1:1
+SIMD ya know
+MIMD many cores
+MISD can be for fault tolerance, space shuttles consensus
+
+<7>
+Von Neumann architecture
+
+Basically the same since the 60s
+
+Heap, CU, ALU, accumulator
+Clock, registers, program counter, stack ptr
+
+Registers, stack, etc represent state
+Threads each have state which needs swapped in n out
+
+<10>
+Threads are separate independent processes executing common program n sharing mem
+Each may have their own registers, prog counters, stack ptrs, vars, etc
+Possible for too many threads swaps against performance
+
+<11>
+Mem alloc in a multithreaded program
+1-thread      multi-threads
+see image on slide
+Same stuff but each thread has own stack & ptr
+Share globals, heap, executable, etc
+
+<13>
+When is it good to use multithreading?
+
+- when ops block waiting, need async
+- specific cpu intensive ops on separate thread
+- specific ops must reply to async IO, including UI
+- prioritize tasks
+
+
+<14>
+Two ways to decompose problem
+
+Functional (or task) decomposition
+
+land <----> air
+    \       /
+      ocean
+
+Domain (or data) decomposition
+
+[x 0 0]
+[0 y 0] * {x,y,z}={x,y,z}
+[0 0 z]
+
+Largely diagonally dominant
+each thread solves part of diag
+
+<15> more data parallel
+<16>
+atomic op - forced to run to completion without interrupt
+barrier = all threads must reach this before any can proceed
+          e.g. want all the data together so we can do next steps
+          e.g. open MP for loop 
+Coarse-grained paralleism, fine grained: break into big/sm tasks
+deterministic: always smae exact output in same order
+dynamic scheduling: divide total tasks so each threads has less than t/n
+reduction: summing things all into one accumulation
+           OpenMP directive has special do reduction 
+shared variable: after fork, var returned and shared
+
+
+<18> parallel prog tips
+19. don't keep internal state
+    it uses shared heap, you gonna fuck it all up
+    C loves it
+    strtok has internal state
+    <20> strtok walkthru, doinks up ya stuff
+    21, strtok_r: r is for re-entrant (or thread safe)
+        it keeps state externally from shared heap
+        every call will pass back out where it left off
+        (reminds me of python generators and yield coroutines)
+
+Q: can I thread every loop of a for loop
+OS has internal thread limit
+
+Hyperthreading: chip keeps state of each thread, can swap threads a lot faster
+                intel "tick-tock" iterations, one gen has 1 core, gen 2 has 1 core w hyperthreading, gen 3 has 2 core, g4 has 2c hyperth
+
+Q: re-entrant solution to tip 1?
+A: pretty much, keep your state inside thread, use _r fnuctions
+
+
+<24> deadlock
+2 threads wait on each other forever
+deadlocks may not be deterministic
+
+<25> acoid race conditions
+often occurs when one thread modifies a var while other thread is using
+use mutex lock to help (mutual exclusion lock)
+
+Q: SPIN TO WIN LOCK
+
+
+<27>
+volitile keyword lets compiler know there might be another thread
+changing a variable in the background, optimizer please don't make any
+assumptions about this
+
+restrict keyworkd
+pinky promise compiler that P and Q won't point to the same place
+
+Q: volitile will also load from mem every time you access instead of storing
+it in a register once and reusing it
+
+<31>
+beware false sharing caching issues
+<slide where more cores is making performance go down>
+
+
+QA notes ===========
+
+threads become processes in proctab, but not in the called fork sense
+Example of encapsulating thread:
+arr[ omp_get_thread_num() ] = 3;
+  then process will use particular index
+
+

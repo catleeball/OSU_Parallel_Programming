@@ -1,0 +1,238 @@
+=== Q&A ===
+
+Q: pragma omp for collapse(2): does this work for multiple sequential loops?
+A: tested this (code in lecture video), it won't compile
+   "collapsed loops not perfectly nested"
+   you can collapse 3+ nested, just must be "perfectly nested"
+
+Q: Can you put a for loop in a `pragma omp parallel sections` and will it parallelize?
+A: tested this (code in live lecture video)
+   you can do this, testing shows weird interleavening. unclear, but would avoid this
+
+
+=== Project 3 ===
+
+Like project two with trapazoid, but now we're doing superquadric surfaces.
+What's the volume under this surface?
+
+Sphere equation: x^2 + y^2 + z^2 = 1
+
+Superquadratic: exponents are N now
+
+In project 3 we will use parallel reduction for volume of superquad w/ N=0.7
+
+X and Y, Numnodes x Numnodes, take numnodes^2 height samples
+   think each point a pin pulled up from surface
+
+- tiles on edges have only 1/2 area
+- tiles on corners will have 1/4 area
+
+work done is NUMNODES^2
+
+Use variable num subdivisions (numnodes). pick at least 8 different ones
+
+Use a variety of numt threads. 1, 2, 4, 8
+
+megaheights per sec
+find parallel fraction
+
+2 graphs showing:
+  - perf as fn of numnodes
+  - <>
+
+
+Reccomend:
+  - use single for-loop over all nodes
+  - can also use collapse for nesting
+
+iu and iv are indicies
+<code above "main" section>
+- call height given iu and iv
+- converting iu and iv to x and y
+- given that what is z?
+
+
+=== Looking at a superquadrics ===
+
+half sphere: N=2
+bulges out >2
+n=10 looks like rounded half cube
+won't ever be perfect cube but will get closer
+
+reducing <2 get a fat tent
+n=1 a pyramid
+n<1 is tent with sucked in sides
+
+
+
+=== Caching Issues in Multicore performance slides ===
+
+problem: path between CPU and memory is relatively slow
+  - waits about as much as 200 cycles to store to / load from mem
+  - 200 cycles doing nothing waiting for bytes to go across
+
+3: solution: added cache(s), hierarchal memory
+  closest to ALU is L1 and is small and fast
+  L2 after, sometimes L3
+
+4: "Distance level" from ALU is the L(N)
+// is main mem counted as L(-1)?
+
+5: nice table of comparing memoires
+   How long is a nanosecond?
+   speed for light to go from screen to your eyes
+   Scaled access is normalized time to comparing with understandable numbers
+   // these comparisons would be cool for blog
+
+6: Cache hits and misses
+   Hit: CPU asks for value, it's in cache, gets it fast
+   Miss: needs to go to main mem
+   Cache line: you get a bunch (usually 64 bytes) from memory around needed data
+     compare to "you don't buy two eggs might as well get a dozen"
+   64 bytes has been the standard forever for some reason
+     idk why it's like this forever
+
+7: spatial and temporal coherence
+   spatial coherence: if I need one mem addr contents now, I'll probably need neightbor soon
+   temporal coherence: need one mem addr now, will probably need it again soon
+   if these are true, you'll get lots of cache hits
+
+8: How bad is cache misses?
+   Looking at row-major vs column-major matrix
+   C keeps arrays contiguous row-major
+
+   float f = Array[y][x];   <-- cache hits, cache line grabs nexts
+   float f = Array[x][y];   <-- :(
+
+11: Graph of by row or by column
+    moral: you need to worry about cache
+
+12: Data structure design: array of structs vs struct of arrays:
+    illustration of each
+    AOS / SOA
+    can make second shadow data structure of both to do fast queries both ways
+
+15: linked list: every time you malloc new node and link it, can be scattered
+    across memory everywhere
+    skipping around memory a lot, lots of cache miss and cache line fetches
+
+16: compromise: make array of uused linked list nodes
+    contiguous in memory. need more, make another N unused nodes
+    // like a dynamic array
+
+17: graph: sometimes as data gets big, performance starts to curve down
+    this is proj 1 at large numbers
+    it does math so fast and asks for another cache line so fast that it cant
+    fetch the data fast enough. violates temporal coherence
+      will talk about solving this later with prefetching, common in simd
+
+18: prefetch graph
+
+Q: how do you build free list like in slide 16?
+A: aside: malloc and new keeps lists of free nodes when they do their mem ops
+
+
+q: How are addrs determined to be on same cache line? is it a mask of the addr to determine what gets pulled into cache?
+A: drawing <re-review this>
+   cache line starts with 6 bits of zeros
+
+
+19: Example of where cache coherence matters: matrix multiply illustration
+    multiply two matricies
+    triple nested fors (see lower left of slide)
+    formula: you don't have to do it in this order
+20: six possible arrangments of these loops
+    some are great or awful at caching
+21: performances of loops for matrix multiplies
+    i-k-j performaed best
+    example of bigger data perf goes down, can't fetch fast enough
+    compare to k-j-i which sucks
+    i-j-k is formula taught, factor of 2 slower than ikj
+22: invert graph to data set size, same story approx
+
+<chat "Creel has good video explaining caches youtube.com/watch?v=UK-0fCchmY (?)>
+
+23: cache architectures "how does this happen in the hardware?"
+    n-way set associative
+    usually 4 for L1
+    N cache lines
+    certain parts of cache reserved for certain parts of memory
+      not sure why assume some stuff dont want to swap against
+    color stripes of cache and memory colors correlate to fetch spots
+    different cache lines in cache will be adjacent see 0 1 in mem
+24: more details on how cache line decisions are made
+    this may be in office hours if people want
+25: example of cacheline
+
+26: Each core gets its own L2 (and L1)
+    if each core asks for global variable, two cache lines will live in CPU
+    MESI (pronounced messy)
+    Modified Exlcusive Shared Invalid
+27: example
+    state is maintained per cachline and per core
+    B modified, A knows its wrong
+    Now A reads next value in cache line but cache is invalid, doesn't know
+    if next value is valid
+      How to sync? if core tries to read from invalid cache line, core halts,
+      sends newest modified cache line to main mem, pulls it back into A
+// what happens if multiple cores modified to diff vals and invalid is hit
+      this is very performance expensive
+    this is false sharing it bad for performance
+    this happens to prevent invalid results
+
+28: False sharing example problem
+    AOS array of structs
+      (use rand so compiler doesn't try to do anything weird to optimize arith ahead)
+30: numpad doesn't get used, it's just there, but it spreads out the values we do care about in memory
+31,32: states of cachelines
+    in example any time core writes a value, it causes invalidation
+33: thick black line on graph is where we are
+    iterate up through slides
+36: numpad=5: one core has thrill of having it in cache without invalidating someone else's cache line
+40: numpad=7: two pairs invalidate each other, but this is down from four, perf jump
+    n     =10: little bump in 4 cores but not 2
+           12: 15 suddenly performance is great
+51: Fix 1: add dummy padding to make your thing fill 64 bits == one cache line
+    int pad(2) struct
+52,53: Fix 2: make local private variable in loop instead
+              now local var is in each core's stack, no cache nonsense
+              compilers don't pad automatically to 64, but will pad to 4
+                e.g. char then int alloced, pads out 3 bytes so int lands on mult of 4
+                ALWAYS USE SIZEOF(), compiler will sometimes pad differently
+54: fix 2 w 4 threads is peak
+        2 w 2 threads is red line max
+        2 w 1 thread is blue linear
+
+Q: cacheline is 64 bytes continuous from memory, 64 bytes grabbed from memory and
+   puts it in mem
+A: yes. doesn't start at addr you specify may go some before and some after, but
+   will get 64 contiguous bytes
+
+Q: can/will this be solved in chip?
+A: not currently
+
+Q: How is cacheline start determined?
+A: [  56 bits  | 6 bits ]
+                000000
+                ^ start of cache line
+   I need A from memory: it masks off 6 bytes and grabs all around
+   that's where it determines where in the 64 it will start
+   "not necessarily a line just group corresponding to mask"
+
+55: how to guarentee your malloc starts on a cache line?
+    normally:
+56: don't just malloc what you need, malloc what you need + 64
+    now you have the bytes you need, plus 64 you don't
+    now all you have to do is find where in 64 is series of 6 zeros,
+    this shows you where you cache line is
+    wastes some memory, but keeps guarentees on a cache line
+    free (p) not free(Arr) , p is what was malloced
+
+57: this is coming up on data decomposition next lecture
+
+
+Q: can adjusting chunksize in a omp parallel for loop help with false sharing?
+A: I don't know, it sounds possible, and have seen people adjust chunksize
+   I have seen people adjust chunksize to keep first N foor loop passes on same core
+
+

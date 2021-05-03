@@ -1,0 +1,79 @@
+Test review: https://web.engr.oregonstate.edu/~mjb/cs575/Tests/test01.html
+
+Today will be Data Decomposition, next Monday will be GPUs
+
+
+=== Project 4 ===
+
+SIMD SEE intrisnsics code given for array mult & reduction timing experiment. Run same experiment against your own C/C++ array mult/reduction code. Using diff array sizes. Run each test some # trials, use peak performance.
+
+Create table & graph of SSE/non-SSE speedup as fn of array size, plot speedup. Speedup will be S=Psse/Pnon-sse=Tsse/Tnon-sse
+
+Don't use OpenMP, don't use multithreading, don't bother computing parallel fraction
+
+
+=== Prefetching ===
+
+If you know you need a certain cache-line from memory, fetch it ahead of time
+
+How far ahead do I need to ask? part of the problem and needs understanding
+
+2. Two key issues: prefetch at right time
+                            at right distance
+3. No consistent way of prefetching
+   g++, icc, MSVS all have different ways of prefetching
+   g++:  void __builtin_prefetch( void*, int rw, int locality );
+                                  ^
+                        addr you want
+
+   sample code: PD=prefetch distance in fp words
+                mod 16 so you get one cache line at a time
+
+4. icc and icpc  do good at prefetching
+   sample code
+5. prefetching in MS VS sample code
+
+7. Effects of prefetching on SIMD comps
+   prefetching helps a little in not-simd, a lot in yes-simd
+
+
+=== Data Decomposition ===
+
+Message passing system/interface for parallel cluster systems / supercomputers
+
+2. Multicore block data decompo
+   you have a steel bar, compute 1D heat transfer
+3. Change derivative into discrete arith
+4. We want the delta of temperature per unit of time
+   all these discrete nodes in the differential are decomposed and paralleliszed
+5. chunk the units across cores
+6. partitioning in 1D data decompo
+   SPIMD model, DoAllWork(me)
+7. Allocate one large contiunous global array
+   Gotta find neighbors even across the split of data across cores
+8. DoAllWork
+   More interesting in MPI on cluster machines
+9. 
+10. Alloc as separate thread-local (private) sub arrays
+    Then you need to swap values across the boundry
+11,12 example code
+14. Perf comparison of strategies
+    One big global array was better significantly
+15. Intracore vs Intercore communication
+    Not a huge deal in multicore computing, but in clusters/supercomputers, harder
+    Compute : Communicate ratio = N : 2
+      4 compute blocks and 2 communicate boundries
+      Comp:Comm = 4:2
+16. Goldilocks problem
+17. Perf graphs
+    6 cores was best, more cores hurt
+    // wondering about dynamically data decomp to run any problem on any # of cores
+18. inverse graph
+19. 2D problem: comp:comm ratio even worse
+    differential looks not that diff
+20. can chunk in idff ways
+22. NxN blocks :  comp:comm = N^2 : 4N = N:4
+23. 3D problem
+    Same stuff, differential eq looks not that diff, but comp:comm gets harder
+
+

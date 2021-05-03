@@ -1,0 +1,80 @@
+=== Slides: Vector Processing (SIMD) ===
+
+2. Important for Fourier transforms, convolutions, etc etc
+3. SIMD intel chips
+   AVX 512 is 16 floats in one op, one whole cache line
+   important because you have to bring in a whole cache line anyways
+4. Regularly multiply scalar is
+   mulss scalar, short
+   mulss src, dest
+5. Cool graph of SSE mult instruction
+   mulps xmm1, xmm0   (mulps src, dst)
+   4 floats at a time loaded at once
+6. SIMD Mult: CEAN C Extensions for Array N
+   how to bring in 4 floats at a time
+  #prama omp simd  <-- over for loop
+    looks like factor of 4 improvment, but actually factor of ~2.5
+8. Graph of SIMD vs non-SIMD
+   almost a free 4x speed improvment
+   done in asm
+9. pragma omp simd performance halfway between, compilers catching up still
+11. Requirements for a foor-loop to be vectorized
+    interloop dependencies: No
+    no jumps or branches
+    <mmore>
+12. Prefetching
+    AVX512 cache can't keep up, memory fetching becomes bottleneck
+    prefetch future needed cache lines ahead of exec
+    more on wednesday
+14. Graph showing prefetching help
+16. ASM simd (must not use -O3, must use gcc/g++)
+17. optimize more
+18. Combine SIMD w multicore
+    do you get 4 x 4 improvment?
+19. Slide compare: yes you get almost, 15x with multicore + simd
+    O3 will screw up asm from previous slide since it uses registeres diff
+20. Intel Intrinsics
+    ASM plugins to C functions
+21. sample c++ w inten intrinsics
+23. intel intrinsic speedups graph
+    bottlenecks into (rel) smaller array size
+    does wacky stuff w registers
+24. Compare asm & intrinsics
+25. OpenCL and CUDA has SIMD data types
+    OpensCL has float4
+26. Code sample
+
+Chat: fun w intrinsics:
+  https://software.intel.com/sites/landingpage/IntresnsicsGuide/#techs=SSE
+
+
+=== Project 3 Functional Decomposition ===
+
+Divide up functions/tasks into threads for convineince (rather than div data
+up for perf)
+
+Deer function will look at state, decide next month how many deer we will have
+  will more deer arrive or leave? based on food, other attrs
+Grain function will look at # deer etc determine how much grain
+State:
+  Month 0-11, Year 2021-2026
+  given funcs to calc temp and precipitation
+    feel free to change stuff
+    some given constants
+  Great use for sections, pragmas to run just Deer, Grain, Watcher, MyAgent
+    MyAgent is homework, make something up
+
+InitBarrier(n) counts how many threads at barrier, dont continue until all are there
+WaitBarrier(n) if you just call this in the same spot, it all will work find
+               works around openmp wait
+
+Results
+  Plot all qtys on same graph
+  in -> cm, f->c helps graph fit together nicer
+  graph the agent too
+
+Note we're not recording performance, this is just for the design pattern
+
+Graphs will look cyclic, temp and percip use sin/cosign to fluctuate around
+
+

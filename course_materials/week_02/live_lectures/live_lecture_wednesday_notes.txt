@@ -1,0 +1,216 @@
+=== Project 1 Q&A ===
+
+1. use X to find T but we want to know X
+2. use X to find T buy we want to know Y
+3. use ...
+
+
+stderr is unbuffered, every char you send goes right out
+super inefficient, BUT buffer disappears if program crashes
+so still useful for debugging
+
+
+=== Amdahl's law ===
+
+<2> Speedup
+
+If you're using N procs, your Speedup(n) is:
+   
+   Speedup  =  Tsub(1)
+      sub(n)  -------- 
+               Tsub(n)
+
+    Where T(1) is exec time on one core
+    and T(n) is exec time on N cores
+    Note that speedup is less than 1
+
+<3>
+
+Amdahl's law
+
+Some amount of program can be parallelized, but some cannot
+So the speedup scales with F(parallel) minus sequential
+   <formula>
+
+<4> nice graph
+  Seqential doesn't go away or get smaller. Just gets more dominant
+
+<5> graph comparing amount of speedup from parallelizable work
+    check what F(parallel) is, more cores might not help a lot
+    dataset needs to be large enough also to justify overhead
+
+<6> same as 5 but diff graph
+
+<7> Highlights more cores does help, but tapers off
+    F(sequential) delimiter, have to think about how to reduce seq
+
+<9> Whole slide of algebra
+    One function if you know the timing
+    One function if you know the speedup
+
+<10> Max possible speedup
+     Asymptote is  ( 1 / (1-F(parallel) )
+     <table>
+     e.g. "F(parallel) 0.5 can never do better than speedup of 2"
+
+<11> Gustafson's observation
+     more optimistic than Amdahl
+     <formula>
+     Sometimes you want to speedup what you have (Amdahl) but
+       sometimes you want bigger datasets.
+     Dataset size impacts speedup
+
+<13> Table of speedup, accounting for increased dataset size
+     "hand wavy assumptions I made to illustrate"
+
+<14><15> Graphs of Gustafson's observation
+
+Aside: Intel announced 3gen 10nm procs with 40 cores
+       but as you can see that doesn't get you more speedup unless you
+       have lots of data or very parallel problems
+
+===
+
+<2> Von Neumann Architecture
+    Essentially computers are all still this with some extra stuff
+
+<3> Moore's Law
+    Double transistors on one chip every ~1.5/2yr
+
+<4> Physical limits
+
+<5> N nanometers, we're topping out
+
+<6> PowerConsumeption proportional to ClockSpeed^2
+    Clock speed hits a plateau
+    As you scale up, it gets real hot
+    can move about 150 watts/cm off a chip
+
+<7> Multicore
+    Hitting transister per chip limit, just add more chips
+    Also added SIMD to the chips to get around moores
+    Plus more cache to get around moores
+
+<10> Multithreading and Multicore
+     Multithreading is a software thing
+     Cores are a hardware thing
+     You can have multithreading without multicore, and predate multicore
+     <venn diagram>
+     Multithreaded Shared Memory Multicore - architecture name
+
+<11> Each core keeps its own state
+     Illustration of cores each having their own registers, prog counters, stacks
+
+<12><13> Hyperthreading *skipped for now*
+
+Q&A aside: memory addressing per core depends if you make shared/private
+
+=== Hyperthreading "Almost Amdahl"
+
+3. Intel started doing every other gen has hyperthreading
+   Two states on each 1core,1cache
+   Core has to stop if it has block for stuff like fetching from mem
+   can last for like 200 cycles
+   Hyperthreading lets this thread take over for that time
+   both threads have state stored so they don't have to swap state from mem
+   
+   Aside about cache on chip to avoid fetching form mem
+   Sometimes more threads than cores can help you out for this reason
+
+4. What is and what can Hyperthreading do?
+   Let H be fraction of CPU's capacity that one hyperthread can keep busy
+   remaining unused capacity is 1-H.
+   Another hyperthread can keep H% of that cap busy, leaves (1-H)*(1-H)
+   remaining unused capacity
+   Up to N hyperthreads is (1-H)^N unused capacity
+
+5. Graph, total formula of SpeedUp
+   "Almost Andahl"
+
+6. Lidar application, graph of 4 cores w 2 hyperthread per core
+   "good is down" want smaller time
+   4 core w hyperthreading, 8 threads
+   did reduce tije, not by half like a new core, but non-neglegable
+   numprocs will give you # of hyperthreads
+
+
+Q&A: chat about hyperthreads, Dr. Bailey suspects 4 hyperthreads per core
+     as further mitigation against moore's law topping out.
+Q: Why does one hyperthread block, the other takes in until it blocks?
+A: Takes over time slice, will swap soon anyways if not block
+
+
+=== Project #1 lecture
+
+What's the probability they can hit the castle?
+
+Monte Carlo sims common irl since there's an amount of uncertainty ranges irl
+- examples about physics sims at OSU
+
+MC sims very parallelizable, same arith, but diff vals
+
+NUMTRIES just to find peak performance, not need for tables/graphs
+tables/graphs are same as the ones in the lecture notes
+
+1 graph: perf v trials
+2        perf v threads
+excel invert
+
+Check 3 tests to see where ball goes
+kind of compound if statment
+
+If all 3 are true, then castle is destroyed
+
+NumHits reduction, see trapazoid rule
+
+
+* case 1 *
+
+Canon starts at y=0, first eq is when it gets to ground again y=0
+First eq :  t = ?/?
+
+Then we plug T into X eq x=0 + vx*t to see if it hit cliff face
+
+
+* case 2 *
+
+what if it hits cliff? how do we know: use X to get Time
+- how long does it take X to get to last 0
+   x = g = 0 + vx*t
+   solve for t
+
+now take time from X and plug into Y
+  if y less than H it hits cliff face
+
+
+* case 3 *
+
+y = h = 0 + vy*t + 0.5 * gravity * t^2
+
+put it into quadratic form at^2 + bt + c = 0, plug into quadratic eq
+then gets you t1, t2
+
+why 2? min T is ball when it reaches cliff level on way up
+       max hits ground on top
+
+Take Max T from quadratic into last eq x = 0 + vx * t
+
+
+Q&A
+
+Castle has no height
+fabs = floating pt abs val
+x - g = d (nice drawing in live lec)
+Only change the ??? in the code (feel free to add prints or w/e if you want)
+Independent vs Dependent vars:
+  see slide 9 in proj slides
+  along the top number of trials
+  Y axis number of threads
+  aside: useful to script this, do all the tests, spew out CSV
+  Independent variables are the ones you change yourself, the two axises
+  Perf is dependent, the outputs, middle portion of table
+Slide 10 has how to turn table to nice graph in excel
+      12 is inverse to get slide 13, the second graph needed
+
+
+=== Office hours till 2pm , post recording time

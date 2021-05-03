@@ -1,0 +1,139 @@
+=== Homeworks ===
+
+Project 1: Probability should be ~6.5%
+Project 2: P should be ~0.436
+
+CS450/550 Intro to Computer Graphics in the Fall
+See also prof's resource webpage
+
+
+=== CUDA ===
+
+1. OSU college eng DGX system for advanced GPU computing
+
+2. six Nvidia DGX-2 systems
+  each has:
+  - 16 nvidia tesla v100 GPUs
+  - 28TB SSD disks
+  - 24 core xeon 8186 2.7ghz CPUs
+  - 1.5TB DDR4-2666 ram
+  - Runs CentOS 7
+
+3. DGX2 vs Rabbit performance
+
+Rabbit everyone shares at same time
+DGX2 queued jobs you can add to queue
+
+Generally: debug on Rabbit, benchmark on DGX2
+  $ ssh rabbit.engr.oregonstate.edu
+
+4,5. How to access DGX
+  $ ssh submit-c.hpc.engr.oregonstate.edu
+  Once in, run:
+  $ module load slurm
+  See queues
+  $ squeue
+  Our partitions are "class"
+
+6. Submitting CUDA jobs to DGX systems using Slurm
+   <bash script on this slide>
+
+7. mail-user=you@email.com for notifiactions on jobs
+
+
+=== Compute Unified Device Architecture (CUDA) ===
+
+2. CUDA is Nvidia only, way to do C++ looking code on a GPU
+   OpenGL all platforms
+   CUDA de facto std in research
+  OpenGL de facto for portability / run anywhere
+
+  You write CPU host code and CUDA code (in same or separate files), directs
+  CPU and GPU to communicate and interact, send tasks from CPU host program to GPU.
+  GPU threads super lightweight, super great for data-parallel problems
+
+3. Comparison of loop in C++ vs CUDA
+   Global identifier == GID == which of the many parallel threads you are
+   in example, each array element assigned to a gpu thread
+   Implied for loop in cuda, cut up array element ops across threads
+
+   Q: What if your array is larger than pool of GIDs?
+   A: have to split up into separate calls
+
+4. GPU workload divided into grid of blocks
+   Each block's workload is divided into grid of threads
+   generally 32 threads per block currently, genreally don't do less than 32 per op
+   make it a multiple of 32 so you don't waste and have idle threads
+
+5. nvidia calls every 32 threads a "warp", each warp execs the same instruction on diff pieces of data
+   threads are linear not 2d like the graphic
+
+6. Scheduling, if a warp blocks, swap to another warp, keep everything busy
+7. Global memory in GPU all threads can access
+   each work group has shared memory, contains work items each with private memory
+   work groups have their own scheduling and run independently
+   sharing between work groups you go up to shared memory
+   in project 5 you do monte carlo again, keep num hits an array in global memory
+   each work item will do one item
+8. constant memory like global, prof not sure when to use this over global
+   global and const mem off chip like RAM
+   registers, private, shared: all on chip
+   > Note: No stack! no funciton calls. you can still do functions but they get inlined. No recursion either.
+
+10. CUDA thread can query where it fits in community of threads and blocks
+    Built in variables to identify which thread and block you are
+
+11. See "for a 1d problem" and "for a 2d porblem" in lower left
+    arrows pointing to where in array you are
+
+12. Types of CUDA fns
+    Compiler for CUDA is NVCC, file given has both your C++ and CUDA code. file ext ".cu"
+    __device__, __global__, __host__ determines if execed and if callable on GPU/Host
+    See table on slide
+
+13. How C code calls the CUDA code
+    (line at top)   function<<< NumBlocks, NumThreadsPerBlock >>>(arg, arg2, ...);
+    Node:  blocks * threads per block = dataset size
+
+14. Perf comparison of number of threads per block
+    128 was best at 128 in this benchmark
+    Notably: small datasets don't benefit, overhead talking to GPU
+15. inverted graph
+
+16. Makefile for running on Rabbit or DGX
+    CUDA v11.1 is most current
+    prof had some program break in v11, suggests using v10 for assignments
+
+18. Multiple GPUs with CUDA
+    directives for using N GPUs
+    Don't do this on DGX, Slurm only lets you have one
+
+
+=== CUDA example (slide deck: CUDA array multiplication) ===
+
+2. the .cu file
+   #include <cuda_runtime.h>
+   Set your own THREADS_PER_BLOCK
+   Note: don't call things ARRAYSIZE, this is already used in CUDA.h, will break stuff
+3. CUDA program error-checking
+   How to dump last error GPU saw
+   ::Q: does CUDA not die on errors? or on some?
+4. all kern functions are voids, if you want to return a value, give a ref or ptr as
+   an arg and update that value instead
+5. cudaMalloc is like malloc
+6. cudMemcpy, like Memcpy. Always second argument gets copied to first arg
+7. Execution parameters, setting up for <<< >>> function call
+   use cuda's timer, will be more accurate with syncing
+   dim3 is a 3 element int array
+8. ArrayMul<<<grid, threads>>>(dA, dB, dC);
+               ^       ^             ^
+          #blocks    #threads       args
+
+    block until kern finishes, use cudaDeviceSynchronize
+
+9. Event loop, timing performance
+10. Done, use cudaMemcpy to bring result back in from GPU
+
+
+
+

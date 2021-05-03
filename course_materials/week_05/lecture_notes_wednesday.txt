@@ -1,0 +1,80 @@
+=== Test Review, Q&A ===
+
+web.engr.oregonstate.edu/~mjb/csc575/Tests/test01.html
+
+I missed first ~10 mins
+
+Q: Do GPUs have atomics?
+A: They have compare and exchange. Does a couple things in one instruciton,
+   since it's one op it won't be interrupted
+Q: If you need an atokmic that spans multiple lines, is `critical` a good
+   threadsafe alternative?
+A: Yes, critical with {} and multiline, or use mutex. Critical is like an
+   anonymous mutex
+
+Andahls Law:
+  - Here's how to calculate parallel speedup
+  - Speedup:  Sn = T1 / Tn = Pn / P1
+  - Speedup efficiency: Sn / n
+  - Amdahl's law computes S, given Fp and N
+  - Inverse A law to compute Fp given S and N
+  - Using parallel fraction to compute max speedup possible regardless of #cores
+  - Gustafson's observation: still gain speedup because can split larger data across more cores
+
+OpenMP:
+  - Shared across threads: heap, executable, globals
+  - not shared across threads: stack, stack ptr, program ctr, registers
+  - stored on stack: local vars, function call return addrs
+  - if your for loop is not in canonical form, OpenMP won't complain, will just
+    quietly produce garbage
+  - declaring a var inside the for loop auto makes it private
+  - scheduling directives: static vs dynamic, can split up jobs different ways
+    if you know some passes will do more work than others
+  - chunksize ("dealing cards")
+  - reduction: why it's necessary to do something other than adding on a shared var
+  - reduction: atomic, critical, speed diffs, when to use
+  - sync: mutexes, barriers, atomic, critical
+  - sections: static thread alloc hard coded
+    - tasks: newer, post-it note analogy, some issues w thread balancing in g++
+      - example tasks: linked list nodes, each thread grabs ones, not a lot of sync, but there is taskwait()
+                       better when each task is independent
+Cache:
+  - L1, L2, L3:  1 is closest to ALU and fastest, number is distance from ALU
+  - Cache hits/misses
+  - Coherence: spatial, temporal
+  - Cache lines, what they are, how large (very usually 64 bytes = 16 floats = 8 doubles)
+  - MESI (Modified, Exclusive, Shared, Invalid) cache states: keeps track of cache lines
+    see also: false sharing: when cache line becomes Invalid, expensive to fetch
+  - False sharing: what it is, why it happens, two ways to fix  <TODO: review this>
+
+<TODO: Project 3: move Now* vars into scope of main thread, have watcher update them based on return on deer, grain, x>
+
+Data decomposition:
+  - Compute to communicate ration, area-to-perimeter ratio <TODO: review>, volume-to-surface ratio <TODO: review>
+  - tradeoff of using more threads: more computing vs less C:C ratio
+
+<TODO: replace math.h pow() fn with just x*x, it's very expensive, does not assume second arg is an int>
+
+Proj 3: everything shared in the parallel sections define macro
+        have to use default(none) and declare shared/private usually
+
+Hyperthreading keeps multiple states in same core,
+  when you have multiple threads per core, they get scheduled and state is swapped in and out
+  hyperthreading keeps 2 (or 4 or +) states per core, allows multiple threads to schedule in and out
+  good since threads will stop/block to get from mem, lets other thread hop in and use compute while other awaits
+  reaction to "if we'll let threads block, might as well let them schedule & swap", trialed on xeon phi
+
+Rabbit server in OSU, has Xeon Phi & GPUs
+  whole machine has 96 GPUs, rabbit is a virt on that
+DGX server in OSU too, search notes set on DGX
+More on these next week
+Rabbit better to debug, DGX better for benchmarking
+
+SIMD trialed initally on xeon phi alongside 64 bit registers, SSE -> AVX -> AVX512
+notations asking for SIMD: CEAN ( A[:] ), OpenMP ( #pragma omp simd ), asm, intel intrensics
+Combining SIMD with multicore
+
+Prefetching: why, how (many ways), prefetch distance
+
+
+

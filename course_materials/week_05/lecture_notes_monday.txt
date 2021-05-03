@@ -1,0 +1,70 @@
+=== GPU ===
+
+GPU chips way more cores, use streaming data
+little-to-no cache
+Uses shaders to instruct hardware
+same op to many data
+
+CPU chips have on-chip logic for branch prediction and out-of-order execution
+GPUs don't, more suited for graphics / simulations
+
+Old GPUs very task specific, now days much more general use
+  e.g. pixel processing vs vertex processing
+
+CUDA cores
+Operand collection -> FP unit   -> 
+                   -> int unit  -> result queue
+
+Takeaway GPUs good at data parallel, not good at traverse linked list
+
+Intel and others call "cuda cores" lanes
+
+12. Grapefruit packing robot
+grippers are dumb == cuda core == lane
+   they all do FP op
+arm tells grippers what to do, arm is multiprocessor
+grapefruits == data
+
+14. Spec sheet example of some gpus
+
+nvidia "streaming multiprocessor" == intel compute unit
+
+gpu platform has some number of devices
+gpu device has comput units
+Compute unit proc elements arranged in grids
+comput uits have a grid of processing elements
+
+17. GPUs expect thousands of threads
+each thread execs same program (called the kernel) but operates on samll piece
+of overall data
+
+18. partical systems are good example
+one thread per particle
+all params into an array in gpu memory
+
+19,20. tensor cores, takes 4x4 matrix * 4x4 matrix + 4x4 matrix
+       very fast hardware for backpropagation, machine learning, deep learning
+Uses fused multiple-add
+
+D = A + (B*C)
+into asm:
+tmp = B*C
+D = A+tmp
+
+FMA instruction does it all in one operation
+neat parallel add/mult, see base 10 example
+
+Two approcahes to combined CPU & GPU
+
+Nvidia's CUDA
+Khronos's OpenCL
+
+1. Combine GPU and CPU code in one file, each compiles its own parts
+2. separate files
+
+23. what happens to flow divergence?
+GPU execs both sides of if statment, makes vector of bools making a mask
+no advantage of if statments in GPU world, it all gets executed on both sides
+
+24. Take away
+GPUs originally made for graphics, but now for any data parallel

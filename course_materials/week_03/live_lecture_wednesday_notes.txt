@@ -1,0 +1,156 @@
+Tasks & functional decomposition today
+Functional decomp important to Project 3
+
+
+=== OpenMP Tasks slides ===
+
+Relatively new, reaction to parallel sections
+
+2. Parallel sections are static, that's when you decide how many sections
+   #pragma omp section { task 1 }  ... { task 2 }
+
+3. Tasks like sections but dynamic
+   Every time you think of something to do, you put it on a sticky note on the wall
+   threads all come get stickies and do them
+   allows dynamic thread creations
+
+4. No implied barrier using #pragma omp taskwait
+
+5. Example how to use tasks
+   This is dynamic because you can put the pragma omp tasks in a loop
+
+6. Example output: oh no getting duplicates, two of everything
+   omp parallel says use two threads, then each task in the body gets two threads each loop pass
+
+7. Single pragma: no matter how many threads come into directive, only one thread per task
+
+8. Non deterministic printing
+   Can control order here with taskwait barriers
+   Usually leave taskwait out unless data dependency since it adds limitations
+
+9. Linked list, every node needs some computation
+   Must use single pragma so each thread isn't traversing the whole linked list together
+     while this thread looks thru linked list, other threads can grab other sticky note tasks
+   taskwait at bottom if you need the whole list to finish computing before moving on
+   p=p->next  gets put on new stickies, outside firstprivate but inside single are done in thread 0
+   at end of single block, thread 0 becomes a regular thread again
+   after this team of threads becomes single thread again
+
+10. Task dependencies
+    pragma omp task depend
+    try not to do this, less flexible
+    sometimes you need this though, see example on slide where a, b, c are computed such that task order matters
+
+11. Tree traversal algorithms
+    Given a binary tree
+
+12. Traverse DFS
+
+13. if single wasn't there, then every thread would traverse whole tree starting at root
+
+14. traverse function: each traverse fires off a new traverse task recursively
+
+15. pow is just arbitrary work here for this sample
+
+16. Blue squares is order traversed
+
+17. which threads got what
+    nondeterministic
+    interesting thread clustering, not sure why
+    thread 0 just didn't do much for some reason
+    it's all in the compiler, hoping for the best :-(
+
+19. Intel compiler is really good icpc
+    Discouraged for this class because it optimizes our sometimes trivial class problems
+    compares gcc and icpc
+
+22. Perf vs # of threads
+
+25. Tasks can exec immediately or be deferred
+    Tasks spread among the current thread team
+    tasks can move between threads, task stealing, grab from each other's backlogs
+    tasks are more dynamic than sections, task still works though if variable # of children / node
+
+
+Q: Can you explain purpose of private and untied again
+A: Tied and untied with tasks
+   untied threads can take tasks from each other's lists of tasks
+   tied when postit goes on wall, a thread claims it, and it stays that thread's
+
+Q: Diff between firstprivate and private?
+A: Private means every thread gets its own personal private copy of the variable 
+   you're passing in an address as p in Process(p) on slide 0
+   p is going to change
+   when you put post it on wall, firstprivate copies value of p into task and makes it private
+   otherwise it's a pointer and the val may be mutated
+
+
+=== Functional (task) Decomposition
+
+Basis for project #3
+
+1. Also called data decomposition
+   Got a for loop and some data, break data bits up, give pieces to each thread or core
+   There's other reasons though! remember openmp predated multiple cores
+
+2. Sim park overall problem has some mostly separate pieces that sometimes need to talk to each other
+   example: browser: lots of threads
+     e.g. one thread gets one image. server blocks? it ok all other threads still going
+   each thread has a single task
+
+4. Done for programming convenience, not necessarily performance
+   Seen also in simulations
+   Each thread has state, each thread computes what happens next
+
+5. Decomposition diagram
+   Project 3 you have deer, grain, weather, temp, percipitation
+     some things make grain grow faster
+     more grain draws in more deer
+     deer eat all the grain and wander off
+   Barriers across threads to sync threads to do next section of computation
+     at barrier threads all copy into state
+     another barrier to ensure all copies are done and accurate before reads
+   Watcher thread is infrastructure, observes overall state, increment time/steps
+   Done barrier, everyone goes back to the top
+   e.g. A does grain, B does deer, and so on. 
+
+6. Diagram now as code example
+   Proj3: each function has a while loop in it
+   How do you know when to stop while loop?
+     maybe global variable, number of steps reached
+     // managed by watch thread?
+
+7. Psuedocode walkthrough of code example
+8. more 7
+9. Graph of sim output
+
+Q: What does waitbarrier() look like
+A: hopefully #pragma barrier , but sometimes you maybe need something else
+
+10. Why can't we just use #pragma omp barrier?
+    Two ways to think of barrier
+      1. let barrier happen at specific code location, when thread gets there, it waits
+      2. let barrier work after specific # threads have gotten there. when thread gets there count++
+    g++ works for #1 and #2
+    VisualStudio compiler *requires* #1
+      - VS is right with regard to the openMP spec
+
+11. Prof made their own barrier code
+    doesn't matter where you put waitBarrier, when thread hits it count++ until all threds # and unblock
+    uses mutexes so no goofyness when incr at waitBarrier
+    If you want VS to like you, do this
+    If you don't care about that it's fine to #pragma omp barrier
+
+12. Tables of threads arriving at wait barrier, counter var states
+    Proj 3: deer thread, grain thread, watcher thread, plus your own threaded simulation (that interacts with the others)
+      doesn't have to be continuous either, e.g. random rolls, on 100 meteor destroys all the grain
+
+
+=== Q&A ===
+
+Q: project 1 I get FP slightly greater than 1
+A: could be slight rounding and also maybe later runs were under greater system load
+
+Q: can you explain what tiles are for proj 2?
+A: // video diagramming
+   node is the center of the tile

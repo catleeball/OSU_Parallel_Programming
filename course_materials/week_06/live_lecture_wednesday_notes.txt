@@ -1,0 +1,43 @@
+<review exam questions and answers>
+
+===== Project 4 ======
+
+Array * Array multiply
+
+- Do a for loop non-simd
+- Do a SIMD version
+  - Supplied example code encompases for loop
+- Don't use the intrinsics, use the assembly
+
+- Each core has a SIMD unit
+- No setup, just executes it
+
+- Extra credit: combined with threads
+
+
+===== Project 5 =====
+
+It's project 1 (catapult project) but with GPU and some tweaked numbers
+
+On project site page:
+
+- "Using Linux for this Project"
+  - Makefile info for running on rabbit and DGX
+  - Use cuda-10.1, some of profs tests don't work on 11.1
+  - NVCC works like GCC flags just takes a .cu instead
+
+Threads in a block execute 32 at a time, w.r.t BLOCKSIZEs
+
+Prof prepends "h" and "d" to arrays if it's host or device array
+
+
+===== Slides: CUDA Matrix Mult =====
+
+2. matrixMult source
+   - assume square matrix here, but will work with variable rows/cols
+3. CUDA error checking source sample
+4. CUDA kern function
+   - three for loops A B C
+
+
+Next week: openCL

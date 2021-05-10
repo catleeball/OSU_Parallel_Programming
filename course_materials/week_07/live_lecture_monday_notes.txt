@@ -1,0 +1,59 @@
+===== [Slides] The Open Computing Language (OpenCL) =====
+
+2. OpenCL has two parts: C/C++ callable API and C-ish OpenCL prog lang
+   OpenCL can run on NVIDIA, AMD, Intel GPUs, intel CPUs, FPGAs
+   at its best on compute devices with large amounts of data parallelism which usually implies GPU usage
+   Much like CUDA in usage
+   Break your problem up into small bits, each piece gets sent to threads on GPU
+   Each thread wakes and asks where it lives in the collection of GPU threads. From there it finds what it should be working on
+   can share data and interoperate with OpenGL
+   WebCL, WebGL JS impl exists, interoperable with OpenCL/OpenGL
+
+3. Open CL part of Khronos standards group
+   <graphic with a lot of big companies in Khronos>
+
+6. OpenCL paradigm, diagram. Same as from the CUDA graph. Host code / OpenCL code talks to each other but two separate source files and compilers
+
+7. OpenCL wants you to break up prob into pieces. Same as CUDA slides approx. Break up the for loop
+   Use is same, but vars slightly different. GIDs are threads
+
+8. OpenCL has SIMD built into language, supports vector parallelism
+   AMD hardware has this built into GPUs w specific instructions, but if compiled for NVIDIA, will compile into software equiv
+
+9. Compute units and proc elements in grids, same as cuda
+   Platform contains devices
+   Devices contain CU compute units
+   Comput units contain processing elements
+
+10. Grid of work groups, work groups of work items
+
+12. Same memory model, work groups have shared memory, work items have private
+    sharing between work groups you have to go out to global mem and back into other WG
+    * Proj 6 you'll use shared memory, you'll copy into array in global mem
+    * reducitons between work groups isn't very practical
+
+14. Sample OpenCL code: query number of platforms
+15. OpenCL err codes
+17. Query # devices on a platform, get by device type (gpu, cpu, etc)
+18. Sample query device code
+
+Project 7a. cl_khr_gl_sharing needed for OpenCL
+
+21-23: Query extensions supported on this device
+       nv means nvidia std
+       kh are khronos std
+24: These numbers in the code, you'll get a zip file of openCL code, comments with number corresponding to these
+25. .h given in zip
+26. Alloc the host mem buffs
+28. Command queue, how commands are sent to GPU
+29. Alloc device mem buffs
+31. Enqueue like conveyor belt to pacman
+    Whopp-a, whopp-a
+33. OpenCL code is compiled in the driver, compiled and linked code sent to GPU
+    (?) is this JIT ?
+    same mechanism used for shader libraries
+35. Read kern code from file into char arr, send it to openCL calls
+38. compile & link the kern code
+41. create kern object
+42. setup kern objects
+43. Enqueue kern obj for exec

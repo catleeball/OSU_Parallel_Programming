@@ -1,0 +1,48 @@
+===== Project 5 CUDA Monte Carlo =====
+
+* see project 5 on prof website
+
+Project one but on GPU
+
+Use CUDA 10.1, school servers have some issues with 11
+
+See note set CUDA on getting things running
+
+New ranges in Project 5 compared to project 1, you will get a diff probability
+
+Run combos of BLOCKSIZE, NUMTRIALS, record perf results
+  - less than 32 BLOCKSIZE is underutilizing, each warp bring 32 bits to GPU
+  - expect small data sets to be inefficient; overhead of talking to GPU
+  - Use CUDA timing, not OpenMP
+
+Do two graphs:
+  - Perf vs NUMTRIALS with multiple curves of BLOCKSIZE
+  - Inverse graph
+
+Compare to project 1 in PDF commentary
+
+<sample code on website>
+
+Declare __device float Radians with the __device so that the GPU can call it
+
+----- fns -----
+
+MoneCarlo: first line is essentially the for loop
+  GID is the index for the arrays being passed in, arrays are the params
+  Pass in num hits array as int *dhits; 0 == no hit, 1 == hit
+  Comment out `fprintf`, CUDA doesn't know that
+
+Main: fill host arrays in first ???
+  pass in params on CLI (or compile in binaries with -DNUMBLOCKS yolo)
+  setup: basically set two params, solve third
+  IN and OUT are #defined as nothing, just a weird comment by professor
+    - just delete this
+  hhits should be zeros and ones, results of hits, sum them up and compute porbability
+
+
+===== Misc ====
+
+OpenCL ref : http://web.engr.oregonstate.edu/~mjb/cs575/opencl20-quick-reference-card.pdf
+OpenMP ref : https://openmp.org/wp-content/uploads/OpenMP-4.0-C.pdf
+CUDA ref   : http://www.info.univ-angers.fr/pub/richer/cuda/CUDA_C_QuickRef.pdf
+

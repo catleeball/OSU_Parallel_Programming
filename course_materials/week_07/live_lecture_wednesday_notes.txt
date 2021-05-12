@@ -46,3 +46,54 @@ OpenCL ref : http://web.engr.oregonstate.edu/~mjb/cs575/opencl20-quick-reference
 OpenMP ref : https://openmp.org/wp-content/uploads/OpenMP-4.0-C.pdf
 CUDA ref   : http://www.info.univ-angers.fr/pub/richer/cuda/CUDA_C_QuickRef.pdf
 
+
+===== OpenCL Events =====
+
+Slides
+
+2. Event is obj that communicates status of OpenCL commands
+   Convyer of tasks into pacman, pacman emits events
+   <?>
+   Events tell pacman to slow down or wait for things <?>
+3. Enqueue functions can wait on events and can emit an event interrupt
+   last param emits the event and broadcasts event
+   2nd & 3rd to last are event list and which events to wait for
+4. Typedef `cl_event`, define some events. pass pointer to event as last arg
+   What you do if you want to do something then read back. this event isn't waiting, but tells read event to wait for it
+5. DAG of dependencies, example code of waiting on earlier events
+6. bigger dag of deps, example code to wait on earlier events
+7. Call the full execution graph struct
+   full example code for graph in 5+6
+9. Put barrier in command queue, it blocks until all commands enqueued have completed, canot emit event
+10. Event Marker, like a Barrier but it announces an event <does marker not block?>
+    No, event markers don't block like barrier
+    Use event emitted from marker to do blocking on
+12. Prof likes to sync with Wait()
+    Reasons to wait:
+      - waiting for something to finish so you can get its data back
+      - timing data, because you don't want to get kernel running until you're ready to start timing
+    WaitForEvents() blocks guarentees won't return until GPU is quiet
+    <not sure I understand the subtle diffs between this, barrier, and event marker>
+13. Get event statuses
+    clGetEventInfo() tells you execution statuses on demand
+
+
+===== Performing Reductions in OpenCL =====
+
+No builtin reductions in GPU world in CUDA or OpenCL, gotta do it yourself
+
+2. Review OpenCL mem model
+   Work group's work items can share memory within group
+   Can use shared memory in work group to sum
+   but can't sum across workgroups without passing back to global
+   So we do a reduction
+   We do a workgroup sum, then fill an array in global memory, one item per wg, each item is sum from the wg
+3. How do we get reduction done?
+   Diagrams 8 workgroups & 8 threads  (way smaller than IRL)
+   Thread zero uses its value and 1's value to sum,
+     then zero uses sum from T2 (which is summed with 3)
+     zero uses sem from T4 (which includes sums of 4, 5, 6, 7)
+     See tree in slide
+   
+We'll go over more slides here on Monday
+

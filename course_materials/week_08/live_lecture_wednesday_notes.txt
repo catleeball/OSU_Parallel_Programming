@@ -1,0 +1,94 @@
+=== OpenCL / OpenGL Vertex Buffer Interop: Particle System Case Study ===
+
+2. OpenCL / OpenGL interoperability
+   Pipeline illustration, 
+4. OpenGL started with:
+   glBegin( triangles);
+   glEnd();
+   magic pen draws the triangles
+   450/550 covers OpenGL a lot more
+   Inefficient for three reasons
+  1. Sending large amounts of small bits of data is less efficient
+     Sending 3 little verticies at once
+  2. Every coord listed in CPU and transferred to GPU each time, bus between
+     bottlenecks
+
+5. The fixed this by vertex buffers transfer a lot at once
+
+6. Rendering Context: attributes of drawing like transforms, colors, textures,
+   lighting, etc
+
+7. glGenBuffers( 1, &buf );
+                     ^
+              refs to buffer to GPU
+
+9. glBindBuffer( gl_array_buffer, buf )
+   Fast to rebind a different vertex buffer, just changing pointer
+
+10. "binding" like "docking" a la star trek
+    ships pop into a docking port to load stuff into the space base
+    plug tables of verticies into gpu
+     ship = buffer, space base = gpu, 
+
+13. glBufferData (type, numbytes, data, usage);
+    use usage GL_STATIC_DRAW
+
+16. fill array, it's an array of xyz structs basically
+
+18. You can do more than tables of verticies, can do tables of colors, surface
+    vecs, texture coords
+    proj 7a uses first two on slides
+
+20. Specifying data on vertex buffers
+    could store verticies first, then colors
+    or can interleven vertexes and structs
+    either way, but tell open GL
+
+23. Write data directly into vertex buffer
+    instead of passing data into buffer, pass nulll, give it a size
+    mallocs gpu mem but doesn't fill it, we do that later
+    call glMapBuffer to put stuff in
+      makes it look like a CPU addr to your program but it's a GPU addr
+
+27. header
+    nice for p 7a
+28, 29 more sample code, openCL global cariables in 29
+...34 more sample code
+
+34. OpenCL context based on openGL context; use for interop
+35. platform specific
+    // Linux has X listed no wayland, hopefully there's one for that too
+36. Setup openCL
+37. MapBuffer init, copy into
+    fill it like it was a CPU buffer, can use for loop
+
+<missed some stuff>
+
+39. Setup device-side buffers
+    CreateFromGLBuffer
+    we're just telling openCL that the GLbuffer exists by pt 5
+
+41. Kern args (ptr array, velocity arr, color arr)
+42. maps code to illustration, how CL and GL interop together
+    clEnqueueAcquireGLObjects
+    clEnqueueReleaseGLObjects
+    Normally never put in wait functions, only for test timing
+
+44. Redraw particle scene
+    one op to draw the verts glDrawArrays
+    doesn't check for changes, just goes and draws it
+
+45. Show performance text in the corner
+46. cleanup
+
+47, 48, 49 go through particle simulation bounce equations & logic
+  missed a lot here, work pings
+  // look back up bouncing particles off the air hack
+
+49. openCL doesn't have reflect fn, Bounce fn basically does this for us
+
+50. Perf graph
+    Generally want us to do everything in 1/60th of a second
+
+457/557 : shaders class in fall
+

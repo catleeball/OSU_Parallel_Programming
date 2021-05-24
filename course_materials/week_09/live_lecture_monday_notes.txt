@@ -1,0 +1,114 @@
+=== Message Passing Interface (MPI): Parallelism on Distributed CPUs ===
+
+2. mpi-forum.org
+     Definitive reference for MPI to read spec
+   open-mpi.org
+     Later consortium OSS version of MPU
+   <link i missed on bottom of slide>
+     Docs & man pages
+
+3. Open MPI Consortium groups
+
+4. MPI basic idea
+   Network connecting multiple CPUs & memories
+   Each CPU in the MPI cluster must be prepared ahead with MPI software & given
+   an int ID rank
+   Computeres talk across network with eachother
+
+6. How to SSH to the COE MPI cluster
+   ssh & slurm to use OSU HPC cluster steps on slide
+
+7. Compile & run MPI
+   mpic++ compiler
+   mpiexec run wrapper, `-np` == num processors
+
+8. Batch script runner
+
+11. use MPI_Init(&argc,&argv) ... MPI_Finalize();
+
+12. MPI uses SPMD model
+    communicator is a collection of CPUs who can talk to each other
+    MPI server code runs on each machine in cluster and administers tasks
+    MPI_Comm_size() <-- Size, how many total CPUs?
+    MPI_Comm_rank() <-- Rank, which one am I?
+
+13. Simple MPI program to see numCPUs, check our Rank, print, exit
+
+14. output from 13. non-deterministic output
+
+16. MPI_Bcast( array, count, type, src, MPI_COMM_WORLD );
+    Broadcast message from one node to all other nodes
+    array = addr of data to broadcast
+    count = int of how many elements
+    type = MPI_{CHAR,INT,LONG,FLOAT,DOUBLE,...}
+    src = int rank of CPU sending
+    MPI_COMM_WORLD = (?)
+
+17. MPI broadcast example code, using heat transfer equation
+    MPI_Bcast does tx, rx, and sync. Only one node should call bcast (ever? scope? MPI_COMM_WORLD?)
+    // tx if boss, rx if not
+
+21. Send data from one src to one dest cpu
+    MPI_Recv(array, numtosend, type, dst, tag, MPI_COMM_WORLD);
+    MPI_Send(
+    same args as bcast basically
+    tag = unique label message to identify message (dtype? char in example, but assume can be others?)
+
+22. Example recv
+
+23. Diagram if input data geting sent around
+24. TX -> RX diagram
+    each CPU has MPI transmission buffer
+    actually goes from tx -> rx's transmission buffer -> rx
+    transmission buffer is in addition to the socket layer tx/rx buffers
+
+25. Example src -> dst
+
+27. Broadcast vs Scatter vs Gather
+    <diagrams>
+
+28. Idiom: Scatter data parts to CPUs, use Gather to reassemble after compute done
+
+29. MPI_Scatter( snd_array, snd_ct, snd_type, rcv_arr, rcv_ct, rcv_type, src, MPI_COMM_WORLD );
+    you can change types during transmission but seems like a dangerous thing to do
+    *Both senders and receivers need to exec MPI_Scatter*
+
+30. MPI_Gather( ... dst, MPI_COMM_WORLD );
+    Same as above but last `src` is now `dst`
+    *Both sender and receivers need to exec MPI_Gather*
+    (how does MPI pick tx and rx nodes for scatter/gather?)
+
+    Q: ???
+    A: Scatter does both tx and rx Gather only does rx
+
+31. Diagram of Compute:Communicate ratio
+    CPUs may need to know the edges of the data sets for each CPU
+    penalty is large in open MPI since it has to comm across net sockets
+
+32,33,34,35,36,37. example: heat.cpp
+
+37: DoOneTimeStep  pt 1
+    important bit, do once, check across data segments, comm between CPUs
+    ( does this comms chain happen once in advance of the processing? )
+    A: this comms is done before computing is done
+    ( why not send overlap elements in every CPU if this is pre-comp? )
+    A: I think he might have missed this Q or I missed the reply
+
+34. MPI Performance graph
+
+46. MPI Reduction
+    (scatter/gather/reduction all together)
+    MPI_Reduce( partialResult, globalResult, ... )
+
+47. MPI reduction example
+
+48. MPI barriers
+
+49. MPI derived types
+    roll your own data struct
+    Q: why don't the computer determine block lengths, displacments, types?
+    A: you can using sizeof and have it do the offset calcs
+
+50. Timing
+51. Autocorrelation ( more on this wednesday when talking about project 7a & 7b)
+

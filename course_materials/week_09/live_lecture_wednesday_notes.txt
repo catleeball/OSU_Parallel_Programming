@@ -1,0 +1,9 @@
+=== Project 7a and 7b ===
+
+Pick one
+
+--- 7a ---
+OpenCL/OpenGL Particle System
+
+--- 7b ---
+Autocorrelation using MPI

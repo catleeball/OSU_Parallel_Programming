@@ -10,6 +10,5 @@ Materials for this class are publically available at:
 
 ## About this Repository
 
-Some source files from the professor have helpful comments. To distinguish my
-own comments from his, I use `////` to prefix my own comments.
+Mostly just notes I took for each week's lectures.
 
